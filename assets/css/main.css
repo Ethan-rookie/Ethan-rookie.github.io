@@ -325,6 +325,20 @@ h3 {
   color: #edf2ee;
 }
 
+.article-body pre.mermaid {
+  display: flex;
+  justify-content: center;
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: #f8fbf9;
+  color: var(--ink);
+}
+
+.article-body .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .article-body code {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: .92em;
