@@ -43,6 +43,12 @@ hugo --gc --minify --destination /tmp/ethan-rookie-blog-public
 node scripts/check_site_links.mjs /tmp/ethan-rookie-blog-public /
 ```
 
+也可以直接运行完整上线前检查：
+
+```bash
+./scripts/preflight_launch.sh
+```
+
 ## 3. 替换上线信息
 
 编辑 `hugo.toml`：
@@ -94,6 +100,14 @@ git push -u origin main
 2. 打开 `Pages`。
 3. `Build and deployment` 的 `Source` 选择 `GitHub Actions`。
 4. 回到 `Actions` 页面等待 `Deploy Hugo site to Pages` 运行成功。
+
+如果 `git push` 前想确认状态，运行：
+
+```bash
+./scripts/preflight_launch.sh
+```
+
+全部显示 `[OK]` 后再推送。
 
 ## 7. 自定义域名可选
 

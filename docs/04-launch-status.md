@@ -11,6 +11,7 @@
 - 已初始化 `blog/` 为独立 Git 仓库。
 - 已提交初始版本：`Initial Hugo personal blog`。
 - 已配置本地 Git remote：`git@github.com:Ethan-rookie/Ethan-rookie.github.io.git`。
+- 已新增上线前检查脚本：`scripts/preflight_launch.sh`。
 
 ## 已验证
 
@@ -48,6 +49,13 @@ http://localhost:1313/
 
 已通过 `scripts/check_site_links.mjs` 扫描生产构建目录中的站内链接和资源路径，缺失数量为 `0`。
 
+上线前检查脚本当前结果：
+
+```text
+GitHub repository is not reachable
+GitHub SSH authentication works
+```
+
 ## 上线前还需要你提供
 
 | 项目 | 例子 | 用途 |
@@ -82,4 +90,4 @@ git push -u origin main
 
 ## 当前阻塞
 
-当前无法直接完成 GitHub 上线，因为本机没有 `gh` 命令，且 `ssh -T git@github.com` 返回 `Permission denied (publickey)`，说明本机 SSH key 尚未绑定到 GitHub 或当前 key 无权访问该账号。创建 `Ethan-rookie.github.io` 仓库并配置 SSH key 后，可以直接运行 `git push -u origin main` 并等待 GitHub Pages 部署。
+当前无法直接完成 GitHub 上线，因为目标仓库 `https://github.com/Ethan-rookie/Ethan-rookie.github.io` 返回 `404`，说明仓库还没有创建或当前不可见。SSH 认证已经通过。创建 `Ethan-rookie.github.io` 仓库后，先运行 `./scripts/preflight_launch.sh`，全部 `[OK]` 后再运行 `git push -u origin main`。

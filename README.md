@@ -29,6 +29,12 @@ hugo --gc --minify --destination /tmp/ethan-rookie-blog-public
 node scripts/check_site_links.mjs /tmp/ethan-rookie-blog-public /
 ```
 
+Before pushing to GitHub:
+
+```bash
+./scripts/preflight_launch.sh
+```
+
 ## Before Publishing
 
 Update `hugo.toml`:
