@@ -45,3 +45,5 @@ Update `hugo.toml`:
 - social links
 
 Deployment details are in [docs/03-local-and-github-pages.md](docs/03-local-and-github-pages.md).
+
+GitHub login comments are configured with Giscus. See [docs/05-comments.md](docs/05-comments.md).

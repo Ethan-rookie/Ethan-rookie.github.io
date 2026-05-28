@@ -12,6 +12,23 @@ summaryLength = 28
   github = "https://github.com/Ethan-rookie"
   email = "hello@example.com"
 
+[params.comments]
+  enabled = true
+
+[params.giscus]
+  repo = "Ethan-rookie/Ethan-rookie.github.io"
+  repoId = "R_kgDOSqB_hA"
+  category = "General"
+  categoryId = "DIC_kwDOSqB_hM4C9_p6"
+  mapping = "pathname"
+  strict = "0"
+  reactionsEnabled = "1"
+  emitMetadata = "0"
+  inputPosition = "bottom"
+  theme = "preferred_color_scheme"
+  lang = "zh-CN"
+  loading = "lazy"
+
 [menu]
   [[menu.main]]
     name = "首页"

@@ -1,0 +1,25 @@
+{{ with .Site.Params.giscus }}
+  <section class="comments" aria-labelledby="comments-title">
+    <div class="comments-heading">
+      <p class="eyebrow">Discussion</p>
+      <h2 id="comments-title">留言</h2>
+    </div>
+    <script
+      src="https://giscus.app/client.js"
+      data-repo="{{ .repo }}"
+      data-repo-id="{{ .repoId }}"
+      data-category="{{ .category }}"
+      data-category-id="{{ .categoryId }}"
+      data-mapping="{{ .mapping | default "pathname" }}"
+      data-strict="{{ .strict | default "0" }}"
+      data-reactions-enabled="{{ .reactionsEnabled | default "1" }}"
+      data-emit-metadata="{{ .emitMetadata | default "0" }}"
+      data-input-position="{{ .inputPosition | default "bottom" }}"
+      data-theme="{{ .theme | default "preferred_color_scheme" }}"
+      data-lang="{{ .lang | default "zh-CN" }}"
+      data-loading="{{ .loading | default "lazy" }}"
+      crossorigin="anonymous"
+      async>
+    </script>
+  </section>
+{{ end }}

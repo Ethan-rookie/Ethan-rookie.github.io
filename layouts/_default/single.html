@@ -14,5 +14,7 @@
       {{ .Content }}
     </div>
   </article>
+  {{ if and .Site.Params.comments.enabled (eq .Section "posts") (ne .Params.comments false) }}
+    {{ partial "comments.html" . }}
+  {{ end }}
 {{ end }}
-

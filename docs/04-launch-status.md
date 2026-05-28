@@ -16,6 +16,8 @@
 - 已推送 `main` 分支到 GitHub。
 - 已把 GitHub Pages 切换到 `workflow` 部署模式。
 - 已通过 GitHub Actions 部署 Hugo 站点。
+- 已启用 GitHub Discussions。
+- 已接入 Giscus 评论组件，文章页支持 GitHub 登录留言。
 
 ## 已验证
 
@@ -51,6 +53,7 @@ http://localhost:1313/
 - `GET https://ethan-rookie.github.io/posts/hello-blog/` 返回 `200 OK`。
 - `GET https://ethan-rookie.github.io/images/home-hero.png` 返回 `200 OK`。
 - 线上首页 HTML 已确认为 Hugo 产物，包含 `Hugo 0.162.0` generator。
+- `content/posts/` 下文章详情页已包含 Giscus 评论脚本。
 
 已通过 `scripts/check_site_links.mjs` 扫描生产构建目录中的站内链接和资源路径，缺失数量为 `0`。
 
@@ -72,6 +75,7 @@ Generated site links resolve
 | 博客标题 | `Ethan-rookie 的个人博客` | 已配置 |
 | 作者名 | `Ethan-rookie` | 已配置 |
 | 联系方式 | GitHub、邮箱等 | 替换页脚和关于页 |
+| Giscus GitHub App | `https://github.com/apps/giscus` | 需要网页授权安装到当前仓库 |
 
 ## 已绑定 GitHub
 

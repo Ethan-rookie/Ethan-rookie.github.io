@@ -284,6 +284,22 @@ h3 {
   padding: clamp(48px, 8vw, 88px) 0 80px;
 }
 
+.comments {
+  width: min(820px, calc(100% - 40px));
+  margin: 0 auto 80px;
+  padding-top: 34px;
+  border-top: 1px solid var(--line);
+}
+
+.comments-heading {
+  margin-bottom: 18px;
+}
+
+.comments-heading h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
 .article-header {
   margin-bottom: 38px;
 }
@@ -374,4 +390,3 @@ h3 {
     width: 100%;
   }
 }
-
