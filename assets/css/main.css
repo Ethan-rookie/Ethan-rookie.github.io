@@ -339,6 +339,52 @@ h3 {
   height: auto;
 }
 
+.article-body table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 28px 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  border-spacing: 0;
+  background: var(--white);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.article-body thead {
+  background: var(--soft);
+}
+
+.article-body th,
+.article-body td {
+  min-width: 150px;
+  padding: 12px 14px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-body th {
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.article-body th:last-child,
+.article-body td:last-child {
+  border-right: 0;
+}
+
+.article-body tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.article-body td code {
+  white-space: nowrap;
+}
+
 .article-body code {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: .92em;
