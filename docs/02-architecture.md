@@ -72,7 +72,7 @@ baseURL = "https://<github-username>.github.io/<repository-name>/"
 如果使用用户主页仓库：
 
 ```toml
-baseURL = "https://<github-username>.github.io/"
+baseURL = "https://ethan-rookie.github.io/"
 ```
 
 ## 本地依赖
@@ -87,4 +87,3 @@ baseURL = "https://<github-username>.github.io/"
 ```bash
 brew install hugo
 ```
-

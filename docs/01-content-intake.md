@@ -6,11 +6,11 @@
 
 | 项目 | 说明 | 当前占位 |
 |---|---|---|
-| GitHub 用户名 | 用于确定 GitHub Pages 域名。个人主页仓库通常是 `<username>.github.io`。 | `<github-username>` |
-| 仓库名 | 如果使用项目页，域名是 `https://<username>.github.io/<repo>/`。如果使用个人主页仓库，仓库名是 `<username>.github.io`。 | `personal-blog` |
-| 博客名称 | 页面标题、导航和浏览器标题。 | `个人博客` |
+| GitHub 用户名 | 用于确定 GitHub Pages 域名。个人主页仓库通常是 `<username>.github.io`。 | `Ethan-rookie` |
+| 仓库名 | 如果使用项目页，域名是 `https://<username>.github.io/<repo>/`。如果使用个人主页仓库，仓库名是 `<username>.github.io`。 | `Ethan-rookie.github.io` |
+| 博客名称 | 页面标题、导航和浏览器标题。 | `Ethan-rookie 的个人博客` |
 | 一句话介绍 | 首页首屏文案。建议 20-40 字。 | `记录工程实践、产品思考和长期项目。` |
-| 作者名称 | 文章作者和页脚展示。 | `Your Name` |
+| 作者名称 | 文章作者和页脚展示。 | `Ethan-rookie` |
 | 联系方式 | GitHub、邮箱、X、LinkedIn、微信公众号等任选。 | GitHub 占位链接 |
 
 ## 推荐补充信息
@@ -42,5 +42,10 @@
 | 项目页 | 任意仓库名，如 `personal-blog` | `https://<username>.github.io/personal-blog/` | 不想占用用户主页仓库 |
 | 自定义域名 | 任意仓库名 | `https://blog.example.com/` | 已有域名并希望品牌化 |
 
-当前工程默认按项目页准备，后续拿到 GitHub 用户名和仓库名后只需要修改 `hugo.toml` 的 `baseURL`。
+当前工程已按 GitHub 用户主页准备，`hugo.toml` 的 `baseURL` 是：
 
+```toml
+baseURL = "https://ethan-rookie.github.io/"
+```
+
+如果后续改成项目页，再把 `baseURL` 改成 `https://ethan-rookie.github.io/<repository-name>/`。

@@ -22,14 +22,20 @@ hugo --minify
 
 Generated files are written to `public/`.
 
+For a clean deploy-style check:
+
+```bash
+hugo --gc --minify --destination /tmp/ethan-rookie-blog-public
+node scripts/check_site_links.mjs /tmp/ethan-rookie-blog-public /
+```
+
 ## Before Publishing
 
 Update `hugo.toml`:
 
-- `baseURL`
-- `title`
-- `[params] author`
+- `baseURL = "https://ethan-rookie.github.io/"`
+- `title = "Ethan-rookie 的个人博客"`
+- `[params] author = "Ethan-rookie"`
 - social links
 
 Deployment details are in [docs/03-local-and-github-pages.md](docs/03-local-and-github-pages.md).
-

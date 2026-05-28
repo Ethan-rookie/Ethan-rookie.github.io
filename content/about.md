@@ -3,7 +3,7 @@ title = "关于"
 description = "个人介绍、关注方向和联系方式。"
 +++
 
-你好，我是 **Your Name**。
+你好，我是 **Ethan-rookie**。
 
 这个页面用于放置个人介绍：你是谁、长期关注什么、正在做哪些项目，以及读者可以在哪里联系你。
 
@@ -18,6 +18,5 @@ description = "个人介绍、关注方向和联系方式。"
 
 ## 联系方式
 
-- GitHub: <https://github.com/>
+- GitHub: <https://github.com/Ethan-rookie>
 - Email: <hello@example.com>
-

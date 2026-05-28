@@ -1,15 +1,15 @@
-baseURL = "https://example.github.io/personal-blog/"
+baseURL = "https://ethan-rookie.github.io/"
 locale = "zh-cn"
-title = "个人博客"
+title = "Ethan-rookie 的个人博客"
 enableRobotsTXT = true
 summaryLength = 28
 
 [params]
-  author = "Your Name"
+  author = "Ethan-rookie"
   subtitle = "记录工程实践、产品思考和长期项目。"
   description = "一个面向长期写作的个人博客，关注工程、产品、AI 基础设施和独立项目。"
   heroImage = "images/home-hero.png"
-  github = "https://github.com/your-github-username"
+  github = "https://github.com/Ethan-rookie"
   email = "hello@example.com"
 
 [menu]

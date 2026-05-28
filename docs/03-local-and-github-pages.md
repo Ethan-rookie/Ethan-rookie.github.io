@@ -36,19 +36,26 @@ blog/public/
 
 `public/` 是生成产物，不提交到源码仓库。
 
+上线前可以额外跑链接检查：
+
+```bash
+hugo --gc --minify --destination /tmp/ethan-rookie-blog-public
+node scripts/check_site_links.mjs /tmp/ethan-rookie-blog-public /
+```
+
 ## 3. 替换上线信息
 
 编辑 `hugo.toml`：
 
 ```toml
-baseURL = "https://<github-username>.github.io/<repository-name>/"
-title = "你的博客名"
+baseURL = "https://ethan-rookie.github.io/"
+title = "Ethan-rookie 的个人博客"
 ```
 
-如果使用 GitHub 用户主页仓库，把 `baseURL` 改成：
+当前按 GitHub 用户主页仓库配置。仓库名必须是：
 
-```toml
-baseURL = "https://<github-username>.github.io/"
+```text
+Ethan-rookie.github.io
 ```
 
 ## 4. 初始化博客 Git 仓库
@@ -68,13 +75,13 @@ git commit -m "Initial Hugo personal blog"
 
 | 类型 | 仓库名 | 说明 |
 |---|---|---|
-| 用户主页 | `<github-username>.github.io` | 域名最短，只能有一个 |
+| 用户主页 | `Ethan-rookie.github.io` | 域名最短，只能有一个 |
 | 项目页 | `personal-blog` | 更灵活，地址包含仓库路径 |
 
 创建远程仓库后关联：
 
 ```bash
-git remote add origin git@github.com:<github-username>/<repository-name>.git
+git remote add origin git@github.com:Ethan-rookie/Ethan-rookie.github.io.git
 git branch -M main
 git push -u origin main
 ```
@@ -98,7 +105,7 @@ git push -u origin main
 常见配置：
 
 ```text
-CNAME blog.example.com -> <github-username>.github.io
+CNAME blog.example.com -> Ethan-rookie.github.io
 ```
 
 如果根域名使用 GitHub Pages，需要按 GitHub 当前文档配置 A/AAAA 记录。DNS 记录可能变动，上线前应以 GitHub Pages 设置页提示为准。
@@ -113,4 +120,3 @@ CNAME blog.example.com -> <github-username>.github.io
 - 移动端导航可读。
 - GitHub Actions 最近一次部署成功。
 - 搜索引擎描述和站点标题符合预期。
-
