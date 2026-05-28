@@ -12,6 +12,10 @@
 - 已提交初始版本：`Initial Hugo personal blog`。
 - 已配置本地 Git remote：`git@github.com:Ethan-rookie/Ethan-rookie.github.io.git`。
 - 已新增上线前检查脚本：`scripts/preflight_launch.sh`。
+- 已创建 GitHub 仓库：`https://github.com/Ethan-rookie/Ethan-rookie.github.io`。
+- 已推送 `main` 分支到 GitHub。
+- 已把 GitHub Pages 切换到 `workflow` 部署模式。
+- 已通过 GitHub Actions 部署 Hugo 站点。
 
 ## 已验证
 
@@ -43,51 +47,53 @@ http://localhost:1313/
 
 已通过 HTTP 检查：
 
-- `GET /` 返回 `200 OK`。
-- `GET /posts/hello-blog/` 返回 `200 OK`。
-- `GET /images/home-hero.png` 返回 `200 OK`。
+- `GET https://ethan-rookie.github.io/` 返回 `200 OK`。
+- `GET https://ethan-rookie.github.io/posts/hello-blog/` 返回 `200 OK`。
+- `GET https://ethan-rookie.github.io/images/home-hero.png` 返回 `200 OK`。
+- 线上首页 HTML 已确认为 Hugo 产物，包含 `Hugo 0.162.0` generator。
 
 已通过 `scripts/check_site_links.mjs` 扫描生产构建目录中的站内链接和资源路径，缺失数量为 `0`。
 
 上线前检查脚本当前结果：
 
 ```text
-GitHub repository is not reachable
+GitHub repository exists
 GitHub SSH authentication works
+Hugo production build succeeded
+Generated site links resolve
 ```
 
-## 上线前还需要你提供
+## 后续可替换内容
 
 | 项目 | 例子 | 用途 |
 |---|---|---|
 | GitHub 用户名 | `Ethan-rookie` | 已配置 |
-| 仓库名 | `Ethan-rookie.github.io` | 需要在 GitHub 创建 |
+| 仓库名 | `Ethan-rookie.github.io` | 已创建 |
 | 博客标题 | `Ethan-rookie 的个人博客` | 已配置 |
 | 作者名 | `Ethan-rookie` | 已配置 |
 | 联系方式 | GitHub、邮箱等 | 替换页脚和关于页 |
 
-## 绑定 GitHub 的下一步
+## 已绑定 GitHub
 
-本地 remote 已配置为用户主页仓库：
+本地 remote：
 
-```bash
-git push -u origin main
+```text
+git@github.com:Ethan-rookie/Ethan-rookie.github.io.git
 ```
 
-如果你后续想改成项目页，再使用：
+线上地址：
 
-```bash
-git remote add origin git@github.com:Ethan-rookie/<repository-name>.git
-git push -u origin main
+```text
+https://ethan-rookie.github.io/
 ```
 
-推送后到 GitHub 仓库：
+后续更新流程：
 
-1. 打开 `Settings`。
-2. 打开 `Pages`。
-3. `Source` 选择 `GitHub Actions`。
-4. 到 `Actions` 页面等待 `Deploy Hugo site to Pages` 成功。
+1. 修改 `content/`、`layouts/`、`assets/` 或配置。
+2. 本地运行 `./scripts/preflight_launch.sh`。
+3. 提交并 `git push`。
+4. 等待 `Deploy Hugo site to Pages` workflow 成功。
 
 ## 当前阻塞
 
-当前无法直接完成 GitHub 上线，因为目标仓库 `https://github.com/Ethan-rookie/Ethan-rookie.github.io` 返回 `404`，说明仓库还没有创建或当前不可见。SSH 认证已经通过。创建 `Ethan-rookie.github.io` 仓库后，先运行 `./scripts/preflight_launch.sh`，全部 `[OK]` 后再运行 `git push -u origin main`。
+无。当前博客已经通过 GitHub Pages 上线。
