@@ -1,5 +1,5 @@
 +++
-title = "发现 Mamba 问题后的定位过程"
+title = "SGLang Not enough space for mamba ping pong idx 定位"
 date = 2026-06-02
 description = "一次 SGLang Mamba scheduler、radix cache、spec v2 与 overlap 组合问题的定位记录。"
 tags = ["SGLang", "Mamba", "Radix Cache", "Speculative Decoding", "问题定位"]
@@ -1146,4 +1146,3 @@ Pod 内定位：
 | 无 spec，保留 mamba radix | `no_buffer + radix enabled` | 可以保留 prefix cache，但 overlap 会关闭 |
 | 已开启 FlashInfer GDN decode | 避免 `no_buffer`，改 `extra_buffer` 或调整 backend | 新版有独立保护 |
 | 已关闭 radix | 不使用 `extra_buffer` | 没有 snapshot 消费者，extra buffer 只会降低并发 |
-
