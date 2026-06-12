@@ -13,13 +13,8 @@
           <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
           <p>{{ .Description | default .Summary }}</p>
         </div>
-        {{ with .Params.tags }}
-          <div class="tag-row">
-            {{ range . }}<span>{{ . }}</span>{{ end }}
-          </div>
-        {{ end }}
+        {{ partial "post-taxonomies.html" . }}
       </article>
     {{ end }}
   </section>
 {{ end }}
-

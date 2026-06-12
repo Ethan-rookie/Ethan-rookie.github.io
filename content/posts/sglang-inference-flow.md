@@ -2,6 +2,7 @@
 title = "sglang推理流程"
 date = 2026-05-28
 description = "SGLang PD 分离请求生命周期：Prefill、Decode、KV Transfer、多模态 ViT 与 Radix Extend。"
+categories = ["SGLang"]
 tags = ["SGLang", "LLM", "PD 分离", "KV Cache", "多模态"]
 draft = false
 +++
@@ -1893,4 +1894,3 @@ Mamba hybrid cache: attention KV 与 state cache 如何在 PD transfer 中共存
 Encoder disaggregation: ViT server、global embedding cache、mooncake embedding transfer
 PD latency breakdown: bootstrap、prefill forward、KV transfer、prebuilt、decode step 的指标体系
 ```
-

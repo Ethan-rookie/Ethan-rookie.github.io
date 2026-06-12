@@ -29,6 +29,10 @@ summaryLength = 28
   lang = "zh-CN"
   loading = "lazy"
 
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+
 [menu]
   [[menu.main]]
     name = "首页"
@@ -38,6 +42,10 @@ summaryLength = 28
     name = "文章"
     pageRef = "/posts"
     weight = 20
+  [[menu.main]]
+    name = "分类"
+    pageRef = "/categories"
+    weight = 25
   [[menu.main]]
     name = "项目"
     pageRef = "/projects"

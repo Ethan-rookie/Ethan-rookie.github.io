@@ -2,6 +2,7 @@
 title = "SGLang Not enough space for mamba ping pong idx 定位"
 date = 2026-06-02
 description = "一次 SGLang Mamba scheduler、radix cache、spec v2 与 overlap 组合问题的定位记录。"
+categories = ["SGLang"]
 tags = ["SGLang", "Mamba", "Radix Cache", "Speculative Decoding", "问题定位"]
 draft = false
 +++

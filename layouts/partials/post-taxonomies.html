@@ -1,0 +1,19 @@
+{{ $categories := .GetTerms "categories" }}
+{{ $tags := .GetTerms "tags" }}
+{{ if or $categories $tags }}
+  <div class="taxonomy-stack">
+    {{ with $categories }}
+      <div class="term-row category-row" aria-label="分类">
+        <span class="term-label">分类</span>
+        {{ range . }}<a class="term-pill category-pill" href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>{{ end }}
+      </div>
+    {{ end }}
+    {{ with $tags }}
+      <div class="term-row tag-row" aria-label="标签">
+        <span class="term-label">标签</span>
+        {{ range . }}<a class="term-pill tag-pill" href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>{{ end }}
+      </div>
+    {{ end }}
+  </div>
+{{ end }}
+

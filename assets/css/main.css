@@ -240,20 +240,43 @@ h3 {
   font-weight: 700;
 }
 
-.tag-row {
-  display: flex;
-  flex-wrap: wrap;
+.taxonomy-stack {
+  display: grid;
   gap: 8px;
   margin-top: 18px;
 }
 
-.tag-row span {
+.term-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.term-label {
+  color: var(--muted-ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.term-pill {
   padding: 4px 9px;
-  border: 1px solid rgba(38, 95, 153, .2);
   border-radius: 999px;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.tag-pill {
+  border: 1px solid rgba(38, 95, 153, .2);
   background: rgba(38, 95, 153, .08);
   color: var(--blue);
-  font-size: 13px;
+}
+
+.category-pill {
+  border: 1px solid rgba(31, 122, 91, .22);
+  background: rgba(31, 122, 91, .09);
+  color: var(--green);
 }
 
 .page-heading {
@@ -277,6 +300,34 @@ h3 {
   gap: 24px;
   align-items: center;
   padding: 24px;
+}
+
+.term-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.term-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.term-card a {
+  font-size: 20px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.term-card span {
+  color: var(--muted-ink);
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .article {

@@ -22,11 +22,7 @@
           <p class="item-date">{{ .Date.Format "2006-01-02" }}</p>
           <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
           <p>{{ .Description | default .Summary }}</p>
-          {{ with .Params.tags }}
-            <div class="tag-row">
-              {{ range . }}<span>{{ . }}</span>{{ end }}
-            </div>
-          {{ end }}
+          {{ partial "post-taxonomies.html" . }}
         </article>
       {{ end }}
     </div>
@@ -42,11 +38,7 @@
         <article class="item-card">
           <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
           <p>{{ .Description | default .Summary }}</p>
-          {{ with .Params.tags }}
-            <div class="tag-row">
-              {{ range . }}<span>{{ . }}</span>{{ end }}
-            </div>
-          {{ end }}
+          {{ partial "post-taxonomies.html" . }}
         </article>
       {{ end }}
     </div>
