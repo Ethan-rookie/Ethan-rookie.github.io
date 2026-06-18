@@ -72,6 +72,265 @@ PD transfer: Prefill 把 KV cache page 和元数据传给 Decode
 MM encoder: 多模态 ViT/encoder 侧，不等于语言模型 Transformer block
 ```
 
+## 0.1 前置知识：kernel、backend、GEMM、FlashInfer 与 CUDA Graph
+
+读后面的 Prefill、Decode、MoE EP、DeepGEMM 之前，先把几个实现层概念分清楚。否则很容易把“模型结构”“数学操作”“kernel 库”“CUDA Graph”混成一件事。
+
+### 0.1.1 从模型模块到 CUDA kernel 的分层
+
+进入 `TPWorker / ModelRunner` 之后，attention、MLP、MoE、sampling 最后都会落到一批 GPU kernel 上。但这中间至少有几层：
+
+| 层级 | 含义 | 例子 | 排查时看什么 |
+| --- | --- | --- | --- |
+| 计算模块 | 模型结构里的大块逻辑 | attention、MLP、MoE、sampling | 慢的是哪一段模型结构 |
+| 数学操作 | 模块内部的核心计算类型 | GEMM、softmax、top-k、reduce、norm | 算力瓶颈更像矩阵乘、注意力还是采样 |
+| 实现后端 | SGLang / PyTorch 选择哪套实现 | FlashInfer、Triton、FA3/FA4、DeepGEMM、cuBLAS | 启动参数和 registry |
+| kernel 库 | 一组优化好的 GPU kernel 加 API | FlashInfer、DeepGEMM、Triton kernel、CUTLASS/TRTLLM kernel | wrapper、workspace、JIT/autotune |
+| CUDA kernel | GPU 上真正执行的小程序 | attention kernel、GEMM kernel、norm kernel | GPU timeline 上的一次 kernel launch |
+| 调度优化 | 怎么把 kernel launch 发给 GPU | CUDA Graph、torch.compile、piecewise CUDA Graph | CPU launch overhead 和 replay 命中 |
+
+一句话记：
+
+```text
+attention / MLP 是模型模块
+GEMM / softmax 是数学操作
+DeepGEMM / FlashInfer / Triton 是实现库或后端
+CUDA kernel 是最终跑在 GPU 上的小程序
+CUDA Graph 是把 kernel launch 序列录下来复用
+```
+
+所以 `backend` 通常是框架侧的抽象名字，不一定等于一个外部库。
+例如 attention backend 可能是 FlashInfer，也可能是 Triton、FA3、FA4、TRTLLM MLA；GEMM backend 又是另一组选择，不会因为 attention backend 选了 FlashInfer，整个 forward 就都变成 FlashInfer。
+
+`wrapper` 则更偏具体库内部的“可复用执行器”。例如 FlashInfer 的 paged KV attention 会维护 decode/prefill wrapper，负责 workspace、indices、plan/run 等细节，再调用底层 CUDA kernel。
+
+### 0.1.2 GEMM 和 DeepGEMM：主要影响 MLP、Linear 和 MoE experts
+
+`GEMM` 可以简单理解成矩阵乘：
+
+```text
+C = A @ B
+```
+
+在 LLM 里 GEMM 很密集：
+
+```text
+qkv_proj: hidden -> Q/K/V
+o_proj: attention output -> hidden
+gate_up_proj: hidden -> intermediate
+down_proj: intermediate -> hidden
+MoE expert w1/w2/w3: token group -> expert hidden
+lm_head: hidden -> vocab logits
+```
+
+所以 `MLP` 不是一个 kernel。它是模型里的一个子层，内部会串起多个 GEMM kernel 和 activation kernel：
+
+```text
+MLP
+-> gate_up_proj: GEMM
+-> SiluAndMul: activation / elementwise kernel
+-> down_proj: GEMM
+```
+
+`DeepGEMM` 是专门优化 GEMM 的 kernel/JIT 库。它不是 attention backend，也不是 CUDA Graph。
+它更适合放在这条链路里理解：
+
+```text
+MLP / MoE expert / FP8 linear
+-> GEMM 或 grouped GEMM
+-> DeepGEMM / cuBLAS / Triton / CUTLASS 等具体实现
+-> CUDA kernel
+```
+
+DeepGEMM 的“编译”和 CUDA Graph capture 也不是一回事：
+
+```text
+DeepGEMM JIT / precompile:
+  为特定 GEMM shape、dtype、layout 准备高性能 GEMM kernel 或调优方案
+
+CUDA Graph capture:
+  把一次 forward 里的 kernel launch 序列录成可 replay 的图
+```
+
+因此如果启动或首次请求阶段看到 `DeepGEMM warmup / JIT` 慢，不要直接判断成 CUDA Graph replay 慢。那通常是 kernel 准备成本，不是每轮 decode 的稳定成本。
+
+### 0.1.3 FlashInfer 和 FlashAttention：有关联，但不是一回事
+
+`FlashAttention` 更像 attention 算法 / attention kernel 家族，核心是高效做：
+
+```text
+QK^T -> softmax -> V
+```
+
+它不只是“把几个 kernel 融合起来”，还包括 IO-aware tiling、online softmax、减少完整 attention matrix 落 HBM。
+
+`FlashInfer` 则是面向 LLM inference 的 kernel 库，范围更大。它可以提供：
+
+```text
+attention wrapper / attention kernel
+paged KV cache attention
+sampling kernel
+FP4 / FP8 GEMM 或 TRTLLM 相关 kernel
+MoE runner
+allreduce fusion
+```
+
+所以关系更像：
+
+```text
+FlashAttention: attention 领域的一类算法 / kernel 实现
+FlashInfer: LLM inference kernel 库，里面可以提供 attention，也可以提供 GEMM、sampling、MoE 等能力
+```
+
+启动参数也要分开看：
+
+| 参数 | 影响范围 | 典型含义 |
+| --- | --- | --- |
+| `--attention-backend` | attention 总后端 | 没拆 prefill/decode 时的默认 attention 实现 |
+| `--prefill-attention-backend` | prefill attention | prefill 可能用更适合长 prompt 的 attention 实现 |
+| `--decode-attention-backend` | decode attention | decode 可能用更适合小步滚 token 的 attention 实现 |
+| `--mm-attention-backend` | 多模态视觉侧 attention | ViT / visual tower 内部 attention 的后端选择 |
+| `--fp8-gemm-backend` | FP8 GEMM | 影响 FP8 linear、MLP、MoE GEMM |
+| `--fp4-gemm-backend` | FP4 GEMM | 影响 FP4 linear、MoE GEMM |
+| `--sampling-backend` | sampling | 影响 logits 后处理和采样 kernel |
+
+这也是为什么性能分析时不能只说“用了 FlashInfer 所以应该快”。更准确要问：
+
+```text
+prefill attention 快还是 decode attention 快？
+MLP / GEMM 是否也换了后端？
+MoE expert 是否走了 grouped GEMM 或 EP dispatcher？
+CUDA Graph 是否命中了当前 batch size？
+```
+
+### 0.1.4 kernel launch 是异步的，但同步点会把等待暴露出来
+
+普通 forward 里，CPU 调 PyTorch op 或后端 API 后，通常只是把 CUDA kernel launch 到某个 CUDA stream 上。kernel launch 大多是异步的：
+
+```text
+CPU enqueue kernel A
+CPU enqueue kernel B
+CPU enqueue kernel C
+GPU stream 按顺序执行 A -> B -> C
+```
+
+这意味着：
+
+```text
+没有显式同步时，CPU 不一定等 GPU 算完
+同一个 stream 上，kernel 之间仍保持顺序
+多个 stream 之间需要 event / dependency 保证正确性
+只用 CPU wall time 计时，可能只测到 enqueue 时间，不一定测到 GPU 真执行时间
+```
+
+真正让 CPU 等 GPU 的常见点包括：
+
+```text
+torch.cuda.synchronize()
+CUDA event synchronize
+GPU tensor 到 CPU 的同步拷贝，例如 .cpu() / .item() / .tolist()
+某些 collective / NCCL 同步点
+输出处理阶段等待前面异步 copy 完成
+```
+
+所以当日志里 `forward_duration`、`sampling`、`copy_sync_wait`、`post_batch_gap` 放大时，要先判断：
+
+```text
+是 GPU kernel 本体慢？
+还是 CPU 在某个同步点终于等到了前面 GPU 的累计时间？
+还是 CPU launch / 结果处理造成 GPU 空泡？
+```
+
+如果 GPU timeline 上 kernel 连续且 SM 很满，优先看 kernel 本体和 batch 形态；如果 kernel 之间有很多空白 gap，才更像 CPU launch overhead、调度抖动或同步等待问题。
+
+### 0.1.5 CUDA Graph：录的是 launch 序列，不是缓存计算结果
+
+CUDA Graph 要解决的是“CPU 每步逐个发 kernel 太贵”的问题，尤其在 decode 小 batch 场景里明显。
+
+普通 decode 一步像这样：
+
+```text
+CPU: launch norm kernel
+CPU: launch qkv GEMM kernel
+CPU: launch rope kernel
+CPU: launch attention kernel
+CPU: launch o_proj GEMM kernel
+CPU: launch MLP GEMM / activation / GEMM
+GPU: 按 stream 顺序执行这些 kernel
+```
+
+CUDA Graph capture 后更像：
+
+```text
+CPU: 更新 input_ids / positions / seq_lens / cache loc 等固定 buffer
+CPU: graph.replay()
+GPU: 按录好的图连续执行这一整段 kernel launch 序列
+```
+
+它省的是：
+
+```text
+Python / PyTorch / C++ dispatcher 逐 op 调度开销
+CUDA driver 每个 kernel 单独 launch 的开销
+kernel 之间因为 CPU 来不及发下一个 kernel 造成的 gap
+CPU 调度抖动带来的 decode latency jitter
+```
+
+它不省的是：
+
+```text
+GPU 上 GEMM / attention / MLP kernel 的真实计算量
+tokenizer / 多模态 load / preprocess / ViT 前处理
+KV transfer 网络传输
+logits / KV / 输出结果本身
+```
+
+也就是说，CUDA Graph 不是“缓存结果”，而是“缓存执行编排模板”。如果 graph 里包含 DeepGEMM kernel，replay 时仍然会执行 DeepGEMM kernel，只是 DeepGEMM kernel 的 launch 被包含在这张图里了。
+
+`--cuda-graph-max-bs` 和 `--cuda-graph-bs` 控制的是 decode CUDA Graph 捕获哪些 batch size。
+例如 `--cuda-graph-max-bs 16` 不是“scheduler 最大 batch 只能是 16”，而是：
+
+```text
+最多捕获到 batch size 16 的 decode graph
+bs <= 16 且满足 padding / shape 条件时，可以选择合适 graph replay
+bs > 16 时通常不能用这批 decode graph，需要走普通 eager / 非 graph 路径
+捕获更多 batch size 会提高覆盖面，但增加启动 capture 时间和静态 buffer / graph 内存
+```
+
+另外还有 piecewise CUDA Graph，它更偏按 token 数捕获部分 forward，常用于 extend/prefill 或 MoE 场景下的局部图优化。
+
+capture 也不等于编译。但 capture 前的 warmup 可能触发 Triton、DeepGEMM、FlashInfer、torch.compile 等 JIT、autotune 或 workspace 初始化，所以启动阶段看到“capture 慢”，可能混了三件事：
+
+```text
+kernel 第一次 JIT / autotune
+CUDA Graph capture 本身
+静态 buffer / wrapper / attention metadata 初始化
+```
+
+### 0.1.6 放回 Prefill、Decode、MoE EP 排查里
+
+这些概念不是为了背名词，而是为了快速判断“慢在哪里”。
+
+| 现象 | 更像哪层问题 | 为什么 |
+| --- | --- | --- |
+| `Prefill batch` 前就慢 | tokenizer / processor / scheduler | 还没进入 TPWorker，kernel、DeepGEMM、CUDA Graph 都解释不了 |
+| `Prefill batch` 已出现，长 prompt GPU 很忙 | prefill attention / GEMM / ViT / language backbone | 已进入 forward，才需要看 attention backend、GEMM backend、ViT |
+| decode 小 batch latency 抖动，GPU kernel 间 gap 多 | CUDA Graph 未命中或 CPU launch overhead | decode 每步 token 少，逐 kernel launch 成本占比高 |
+| decode GPU 计算本身满，kernel 连续 | attention / GEMM kernel 吞吐 | CUDA Graph 只能减少 launch gap，不能减少 GEMM / attention 计算量 |
+| DeepGEMM 首次请求或启动很慢 | DeepGEMM JIT / precompile / warmup | 这是 kernel 准备成本，不是每步 replay 成本 |
+| `--attention-backend` 换了但 MLP 仍慢 | GEMM / MoE 后端没变 | attention backend 只管 attention，不直接决定 MLP GEMM |
+| MoE EP 打开但单 token 没变少 | EP 只负责 expert 放置和 dispatch | 计算少来自 MoE 稀疏激活，不是 EP 自己把 dense MLP 变小 |
+| 多模态大图前置慢 | processor load / preprocess | 这发生在 scheduler / TPWorker 前，和 CUDA Graph / DeepGEMM 无关 |
+
+因此排查时可以按一句话切开：
+
+```text
+前置慢看 processor 和对象大小；
+forward 慢看 ForwardBatch、attention/GEMM/kernel；
+MoE 慢看 router、EP dispatch、grouped GEMM；
+decode 小 batch launch gap 多再看 CUDA Graph 命中。
+```
+
 ## 1. 启动阶段：先把 Prefill 和 Decode 两类 worker 准备好
 
 PD 分离不是一个进程里临时决定“这次做 prefill，那次做 decode”。启动时角色已经由参数决定：
