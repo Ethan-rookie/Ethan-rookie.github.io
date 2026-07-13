@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OrbitGo 太阳系旅行导航</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css?v=20260713-7" />
+  </head>
+  <body>
+    <main class="app-shell" aria-label="OrbitGo 太阳系旅行导航">
+      <canvas id="spaceMap"></canvas>
+      <div class="frame-lines" aria-hidden="true">
+        <i class="frame-corner is-top-left"></i>
+        <i class="frame-corner is-top-right"></i>
+        <i class="frame-corner is-bottom-left"></i>
+        <i class="frame-corner is-bottom-right"></i>
+        <span class="frame-ticks is-top"></span>
+        <span class="frame-ticks is-bottom"></span>
+      </div>
+
+      <header class="topbar">
+        <div class="brand" aria-label="OrbitGo">
+          <span class="brand-mark"></span>
+          <span class="brand-copy">
+            <strong>日轨 · 漫游</strong>
+            <small>ORBITGO / SOLAR NAVIGATION</small>
+          </span>
+        </div>
+        <div class="route-search" aria-label="路线搜索">
+          <label class="field">
+            <span>出发</span>
+            <select id="originSelect"></select>
+          </label>
+          <button class="icon-button" id="swapRoute" title="交换起终点" type="button">⇄</button>
+          <label class="field">
+            <span>抵达</span>
+            <select id="destinationSelect"></select>
+          </label>
+        </div>
+        <div class="mode-stack">
+          <div class="experience-switch" aria-label="体验模式">
+            <button class="experience-button" data-experience="real" type="button">真实航天</button>
+            <button class="experience-button is-active" data-experience="fantasy" type="button">跃迁探索</button>
+          </div>
+          <div class="mission-status" aria-label="导航链路状态">
+            <span class="status-dot"></span>
+            <span id="dataStatus">娱乐航行模型</span>
+          </div>
+        </div>
+      </header>
+
+      <aside class="route-panel" aria-label="路线详情">
+        <nav class="section-tabs" aria-label="分类">
+          <button class="tab is-active" data-panel="route" type="button">路线</button>
+          <button class="tab" data-panel="vehicle" type="button">载具</button>
+          <button class="tab" data-panel="timing" type="button">时机</button>
+          <button class="tab" data-panel="place" type="button">地点</button>
+          <button class="tab" data-panel="energy" type="button">能源</button>
+        </nav>
+
+        <section class="panel-section" data-panel-view="route">
+          <div class="section-heading">
+            <p class="eyebrow">Route</p>
+            <h1 id="routeTitle">地球到火星</h1>
+            <p class="route-model" id="routeModel">简化霍曼转移 · 娱乐导航估算</p>
+          </div>
+          <div class="metrics-grid" id="routeMetrics"></div>
+          <section class="solver-console" id="realSolver" hidden>
+            <div class="console-heading"><span>JPL / LAMBERT</span><strong id="solverStatus">等待星历</strong></div>
+            <label class="range-field">
+              <span>转移时间 <b id="flightDaysValue">260 天</b></span>
+              <input id="flightDays" type="range" min="30" max="1600" value="260" step="5" />
+            </label>
+            <div class="solver-readout" id="solverReadout"></div>
+          </section>
+          <section class="energy-planner" id="energyPlanner">
+            <div class="console-heading"><span>ENERGY PLAN</span><strong id="energyPlanStatus">可启航</strong></div>
+            <div class="energy-plan-grid" id="energyPlanGrid"></div>
+            <div class="travel-mode" aria-label="航行方式">
+              <button class="travel-mode-button is-active" data-travel-mode="cruise" type="button">常规推进</button>
+              <button class="travel-mode-button" data-travel-mode="warp" type="button">空间跃迁</button>
+            </div>
+          </section>
+          <div class="mode-group" id="modeGroup" aria-label="路线模式"></div>
+          <div class="route-steps" id="routeSteps"></div>
+        </section>
+
+        <section class="panel-section is-hidden" data-panel-view="vehicle">
+          <div class="section-heading">
+            <p class="eyebrow">Vehicle</p>
+            <h2>交通工具</h2>
+          </div>
+          <div class="vehicle-list" id="vehicleList"></div>
+        </section>
+
+        <section class="panel-section is-hidden" data-panel-view="timing">
+          <div class="section-heading">
+            <p class="eyebrow">Timing</p>
+            <h2>出发窗口</h2>
+          </div>
+          <div class="timing-board" id="timingBoard"></div>
+        </section>
+
+        <section class="panel-section is-hidden" data-panel-view="place">
+          <div class="section-heading">
+            <p class="eyebrow">Place</p>
+            <h2 id="placeTitle">地球</h2>
+          </div>
+          <div class="place-detail" id="placeDetail"></div>
+        </section>
+
+        <section class="panel-section is-hidden" data-panel-view="energy">
+          <div class="section-heading">
+            <p class="eyebrow">Resource</p>
+            <h2>矿石与能源</h2>
+          </div>
+          <div class="energy-inventory" id="energyInventory"></div>
+          <div class="mining-site" id="miningSite"></div>
+          <button class="primary-button collect-button" id="collectEnergy" type="button">采集当前矿脉</button>
+        </section>
+      </aside>
+
+      <section class="route-glance" aria-label="地图路线总览">
+        <div class="glance-head">
+          <span class="glance-mark"></span>
+          <div>
+            <span id="glanceMode">推荐路线</span>
+            <strong id="glanceTitle">地球 → 火星</strong>
+          </div>
+        </div>
+        <div class="glance-metrics">
+          <span><strong id="glanceDuration">26 天</strong>耗时</span>
+          <span><strong id="glanceDistance">124 万公里</strong>航程</span>
+          <span><strong id="glanceWindow">75/100</strong>窗口</span>
+        </div>
+        <div class="glance-line">
+          <span id="glanceOrigin">地球</span>
+          <i></i>
+          <span id="glanceDestination">火星</span>
+        </div>
+      </section>
+
+      <section class="cockpit-hud" aria-label="第一人称航行状态">
+        <span id="cockpitPhase">DEPARTURE / 姿态建立</span>
+        <strong id="cockpitTitle">前往火星</strong>
+        <div>
+          <span><small id="cockpitRemainingLabel">剩余</small><b id="cockpitRemaining">26 天</b></span>
+          <span><small>全程</small><b id="cockpitDuration">26 天</b></span>
+          <span><small>航程</small><b id="cockpitDistance">124 万公里</b></span>
+        </div>
+        <i><em id="cockpitProgress"></em></i>
+      </section>
+
+      <div class="cockpit-frame" aria-hidden="true">
+        <div class="cockpit-edge is-top"><i></i><i></i><i></i></div>
+        <div class="cockpit-edge is-bottom"><i></i><i></i><i></i></div>
+        <div class="cockpit-heading-tape"><span>330</span><b>N</b><span>030</span></div>
+        <div class="cockpit-reticle"><i></i><i></i><span></span></div>
+        <div class="cockpit-side-scale is-left"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="cockpit-side-scale is-right"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="cockpit-horizon-line"></div>
+        <div class="cockpit-lock is-top-left"></div>
+        <div class="cockpit-lock is-top-right"></div>
+        <div class="cockpit-lock is-bottom-left"></div>
+        <div class="cockpit-lock is-bottom-right"></div>
+      </div>
+
+      <section class="cockpit-console" aria-label="飞行器操控台">
+        <div class="cockpit-instruments">
+          <div class="attitude-display" aria-hidden="true">
+            <i></i><i></i><span id="attitudeValue">+00.0°</span>
+          </div>
+          <div class="instrument-readouts">
+            <span><small>推进器</small><b id="engineMode">巡航推进</b></span>
+            <span><small>反应堆</small><b id="reactorValue">82%</b></span>
+            <span><small>当前能源</small><b id="cockpitFuel">6.0 u</b></span>
+          </div>
+        </div>
+        <label class="throttle-control">
+          <span>THROTTLE <b id="throttleValue">62%</b></span>
+          <input id="throttle" type="range" min="20" max="100" value="62" step="1" />
+        </label>
+        <div class="reactor-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <button class="warp-control" id="warpControl" type="button">充能跃迁</button>
+      </section>
+
+      <div class="view-strip" aria-label="视角模式">
+        <button class="view-button is-active" data-view="overview" type="button">总览</button>
+        <button class="view-button" data-view="route" type="button">路线</button>
+        <button class="view-button" data-view="destination" type="button">近景</button>
+        <button class="view-button real-follow-view" data-view="follow" type="button">自转跟随</button>
+        <button class="view-button" data-view="cockpit" type="button">深空</button>
+      </div>
+
+      <section class="planet-preview" aria-label="目的地星球预览">
+        <canvas id="planetPreview"></canvas>
+        <div class="planet-preview-meta">
+          <span id="planetPreviewSource">NASA 贴图</span>
+          <strong id="planetPreviewTitle">火星</strong>
+        </div>
+      </section>
+
+      <div class="map-toolbar" aria-label="地图控制">
+        <button class="icon-button" id="zoomIn" title="放大" type="button">+</button>
+        <button class="icon-button" id="zoomOut" title="缩小" type="button">−</button>
+        <button class="icon-button" id="resetView" title="重置视角" type="button">⟳</button>
+      </div>
+
+      <div class="layer-switcher" aria-label="图层">
+        <label><input id="orbitsLayer" type="checkbox" checked /> 轨道</label>
+        <label><input id="labelsLayer" type="checkbox" checked /> 标签</label>
+        <label><input id="stationsLayer" type="checkbox" checked /> 港口</label>
+      </div>
+
+      <footer class="time-ribbon" aria-label="时间控制">
+        <button class="icon-button" id="playTime" title="播放时间" type="button">▶</button>
+        <div class="date-chip" id="dateChip">2042-01-01</div>
+        <input id="timeSlider" type="range" min="0" max="2400" value="260" step="1" />
+        <label class="compact-field">
+          <span>倍率</span>
+          <select id="timeScale">
+            <option value="0.35">慢</option>
+            <option value="1" selected>巡航</option>
+            <option value="3">快</option>
+            <option value="9">跃迁</option>
+          </select>
+        </label>
+        <button class="primary-button" id="launchButton" type="button">启航</button>
+      </footer>
+    </main>
+
+    <script type="module" src="./src/app.js?v=20260713-8"></script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 {{ define "main" }}
-  <article class="article">
+  <article class="article{{ if .Params.wide }} is-wide{{ end }}">
     <header class="article-header">
       {{ if not .Date.IsZero }}<p class="item-date">{{ .Date.Format "2006-01-02" }}</p>{{ end }}
       <h1>{{ .Title }}</h1>
